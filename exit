@@ -1,0 +1,210 @@
+[1mdiff --git a/app/controllers/lists_controller.rb b/app/controllers/lists_controller.rb[m
+[1mindex 9c9d373..ca13e23 100644[m
+[1m--- a/app/controllers/lists_controller.rb[m
+[1m+++ b/app/controllers/lists_controller.rb[m
+[36m@@ -1,13 +1,40 @@[m
+ class ListsController < ApplicationController[m
+[32m+[m
+   def new[m
+[32m+[m[32m    @list = List.new[m
+[32m+[m[32m  end[m
+[32m+[m
+[32m+[m[32m  # 以下を追加[m
+[32m+[m[32m  def create[m
+[32m+[m[32m    # １.&2. データを受け取り新規登録するためのインスタンス作成[m
+[32m+[m[32m    list = List.new(list_params)[m
+[32m+[m[32m    # 3. データをデータベースに保存するためのsaveメソッド実行[m
+[32m+[m[32m    list.save[m
+[32m+[m[32m    redirect_to list_path(list.id)[m
+   end[m
+ [m
+[31m-  def index[m
+[32m+[m[32m def index[m
+[32m+[m[32m    @lists = List.all[m
+   end[m
+ [m
+   def show[m
+[32m+[m[32m   @list = List.find(params[:id])[m
+   end[m
+ [m
+   def edit[m
+[32m+[m[32m    @list = List.find(params[:id])[m
+[32m+[m[32m  end[m
+[32m+[m
+[32m+[m[32m   def update[m
+[32m+[m[32m    list = List.find(params[:id])[m
+[32m+[m[32m    list.update(list_params)[m
+[32m+[m[32m    redirect_to list_path(list.id)[m
+[32m+[m[32m  end[m
+[32m+[m
+[32m+[m
+[32m+[m[32m  private[m
+[32m+[m[32m  # ストロングパラメータ[m
+[32m+[m[32m  def list_params[m
+[32m+[m[32m    params.require(:list).permit(:title, :body, :image)[m
+   end[m
+ end[m
+[1mdiff --git a/app/models/list.rb b/app/models/list.rb[m
+[1mindex 513b963..353e000 100644[m
+[1m--- a/app/models/list.rb[m
+[1m+++ b/app/models/list.rb[m
+[36m@@ -1,2 +1,3 @@[m
+ class List < ApplicationRecord[m
+[32m+[m[32m   has_one_attached :image[m
+ end[m
+[1mdiff --git a/app/views/lists/edit.html.erb b/app/views/lists/edit.html.erb[m
+[1mindex 33467fd..da76c21 100644[m
+[1m--- a/app/views/lists/edit.html.erb[m
+[1m+++ b/app/views/lists/edit.html.erb[m
+[36m@@ -1,2 +1,13 @@[m
+[31m-<h1>Lists#edit</h1>[m
+[31m-<p>Find me in app/views/lists/edit.html.erb</p>[m
+[32m+[m[32m<h1>編集画面</h1>[m
+[32m+[m
+[32m+[m[32m<%= form_with model: @list, url: update_list_path(@list.id), method: :patch do |f| %>[m
+[32m+[m
+[32m+[m[32m  <h4>タイトル</h4>[m
+[32m+[m[32m  <%= f.text_field :title %>[m
+[32m+[m
+[32m+[m[32m  <h4>本文</h4>[m
+[32m+[m[32m  <%= f.text_area :body %>[m
+[32m+[m
+[32m+[m[32m  <%= f.submit '保存' %>[m
+[32m+[m
+[32m+[m[32m<% end %>[m
+\ No newline at end of file[m
+[1mdiff --git a/app/views/lists/index.html.erb b/app/views/lists/index.html.erb[m
+[1mindex 1a3fec9..1a29678 100644[m
+[1m--- a/app/views/lists/index.html.erb[m
+[1m+++ b/app/views/lists/index.html.erb[m
+[36m@@ -1,2 +1,17 @@[m
+[31m-<h1>Lists#index</h1>[m
+[31m-<p>Find me in app/views/lists/index.html.erb</p>[m
+[32m+[m[32m<h1>投稿一覧</h1>[m
+[32m+[m
+[32m+[m[32m<% @lists.each do |list| %>[m
+[32m+[m
+[32m+[m[32m  <p>タイトル</p>[m
+[32m+[m[32m  <span>[m
+[32m+[m[32m     <%= link_to list.title, list_path(list.id) %>[m
+[32m+[m[32m  </span>[m
+[32m+[m
+[32m+[m[32m   <p>画像</p>[m
+[32m+[m[32m  <% if list.image.attached? %>[m
+[32m+[m[32m    <%= image_tag list.image, size: "200x200" %>[m
+[32m+[m[32m  <% else %>[m
+[32m+[m[32m    <%= image_tag 'no_image', size: "200x200" %>[m
+[32m+[m[32m  <% end %>[m
+[32m+[m
+[32m+[m[32m<% end %>[m
+[1mdiff --git a/app/views/lists/new.html.erb b/app/views/lists/new.html.erb[m
+[1mindex 633f289..f4a4e45 100644[m
+[1m--- a/app/views/lists/new.html.erb[m
+[1m+++ b/app/views/lists/new.html.erb[m
+[36m@@ -1,2 +1,13 @@[m
+[31m-<h1>Lists#new</h1>[m
+[31m-<p>Find me in app/views/lists/new.html.erb</p>[m
+[32m+[m[32m<h1>新規投稿</h1>[m
+[32m+[m[32m<%= form_with model: @list, url: '/lists', method: :post do |f| %>[m
+[32m+[m[32m  <h4>タイトル</h4>[m
+[32m+[m[32m  <%= f.text_field :title %>[m
+[32m+[m
+[32m+[m[32m  <h4>本文</h4>[m
+[32m+[m[32m  <%= f.text_area :body %>[m
+[32m+[m
+[32m+[m[32m  <h4>画像</h4>[m
+[32m+[m[32m  <%= f.file_field :image, accept: "image/*" %>[m
+[32m+[m
+[32m+[m[32m  <%= f.submit '投稿' %>[m
+[32m+[m[32m<% end %>[m
+\ No newline at end of file[m
+[1mdiff --git a/app/views/lists/show.html.erb b/app/views/lists/show.html.erb[m
+[1mindex 3984c98..52f816b 100644[m
+[1m--- a/app/views/lists/show.html.erb[m
+[1m+++ b/app/views/lists/show.html.erb[m
+[36m@@ -1,2 +1,12 @@[m
+[31m-<h1>Lists#show</h1>[m
+[31m-<p>Find me in app/views/lists/show.html.erb</p>[m
+[32m+[m[32m<h2>タイトル</h2>[m
+[32m+[m[32m<p><%= @list.title %></p>[m
+[32m+[m
+[32m+[m[32m<h2>本文</h2>[m
+[32m+[m[32m<p><%= @list.body %></p>[m
+[32m+[m
+[32m+[m[32m<h2>画像</h2>[m
+[32m+[m[32m<% if @list.image.attached? %>[m
+[32m+[m[32m  <%= image_tag @list.image, size: "300x300" %>[m
+[32m+[m[32m<% else %>[m
+[32m+[m[32m  <%= image_tag 'no_image', size: "300x300" %>[m
+[32m+[m[32m<% end %>[m
+\ No newline at end of file[m
+[1mdiff --git a/config/routes.rb b/config/routes.rb[m
+[1mindex 0bde72b..30e6de2 100644[m
+[1m--- a/config/routes.rb[m
+[1m+++ b/config/routes.rb[m
+[36m@@ -1,8 +1,11 @@[m
+ Rails.application.routes.draw do[m
+   get 'lists/new'[m
+[31m-  get 'lists/index'[m
+[31m-  get 'lists/show'[m
+[31m-  get 'lists/edit'[m
+[31m-  get '/top' => 'homes#top'[m
+   # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html[m
+[31m-end[m
+[32m+[m[32m  get 'top' => 'homes#top'[m
+[32m+[m[32m  post 'lists' => 'lists#create'[m
+[32m+[m[32m  get 'lists' => 'lists#index'[m
+[32m+[m[32m  # .../lists/1 や .../lists/3 に該当する[m
+[32m+[m[32m  get 'lists/:id' => 'lists#show', as: 'list'[m
+[32m+[m[32m  get 'lists/:id/edit' => 'lists#edit', as: 'edit_list'[m
+[32m+[m[32m  patch 'lists/:id' => 'lists#update', as: 'update_list'[m
+[32m+[m[32mend[m
+\ No newline at end of file[m
+[1mdiff --git a/db/schema.rb b/db/schema.rb[m
+[1mindex 2b27cf3..7df5630 100644[m
+[1m--- a/db/schema.rb[m
+[1m+++ b/db/schema.rb[m
+[36m@@ -10,7 +10,35 @@[m
+ #[m
+ # It's strongly recommended that you check this file into your version control system.[m
+ [m
+[31m-ActiveRecord::Schema.define(version: 2023_08_09_040500) do[m
+[32m+[m[32mActiveRecord::Schema.define(version: 2023_08_10_062223) do[m
+[32m+[m
+[32m+[m[32m  create_table "active_storage_attachments", force: :cascade do |t|[m
+[32m+[m[32m    t.string "name", null: false[m
+[32m+[m[32m    t.string "record_type", null: false[m
+[32m+[m[32m    t.bigint "record_id", null: false[m
+[32m+[m[32m    t.bigint "blob_id", null: false[m
+[32m+[m[32m    t.datetime "created_at", null: false[m
+[32m+[m[32m    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"[m
+[32m+[m[32m    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true[m
+[32m+[m[32m  end[m
+[32m+[m
+[32m+[m[32m  create_table "active_storage_blobs", force: :cascade do |t|[m
+[32m+[m[32m    t.string "key", null: false[m
+[32m+[m[32m    t.string "filename", null: false[m
+[32m+[m[32m    t.string "content_type"[m
+[32m+[m[32m    t.text "metadata"[m
+[32m+[m[32m    t.string "service_name", null: false[m
+[32m+[m[32m    t.bigint "byte_size", null: false[m
+[32m+[m[32m    t.string "checksum", null: false[m
+[32m+[m[32m    t.datetime "created_at", null: false[m
+[32m+[m[32m    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true[m
+[32m+[m[32m  end[m
+[32m+[m
+[32m+[m[32m  create_table "active_storage_variant_records", force: :cascade do |t|[m
+[32m+[m[32m    t.bigint "blob_id", null: false[m
+[32m+[m[32m    t.string "variation_digest", null: false[m
+[32m+[m[32m    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true[m
+[32m+[m[32m  end[m
+ [m
+   create_table "lists", force: :cascade do |t|[m
+     t.string "title"[m
+[36m@@ -19,4 +47,6 @@[m [mActiveRecord::Schema.define(version: 2023_08_09_040500) do[m
+     t.datetime "updated_at", precision: 6, null: false[m
+   end[m
+ [m
+[32m+[m[32m  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"[m
+[32m+[m[32m  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"[m
+ end[m
